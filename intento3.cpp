@@ -27,15 +27,17 @@ void *estructura(int i){
     string posicion = to_string(i); //string con la posicion de la hebra en su arreglo
     int posicion2 = i; //int con la posicion 
     
+    //llamado a ping de ip y guardado de resultado en txt nuevo
     string linea = "ping -q -c"+cant_paquetes+" "+ips[posicion2]+" > archivo"+posicion+".txt";
     const char * comando = linea.c_str();
     system(comando);
 
-    //--------------------------------------Recolección de info
+    //--------------------------------------Recolección de información
     
     char temp[100];
     int cont = 0;
     
+    //lectura de archivo anteriormente creado con resultado de ping
     FILE *file;
     string archivo = "archivo"+posicion+".txt";
     //cout << archivo;
@@ -55,10 +57,12 @@ void *estructura(int i){
         }
         cont++;
     }
+
     cont = 0;
     string temp2;
     stringstream input_stringstream(info[posicion2]);
-    
+
+    //separación de información detallada
     while(getline(input_stringstream, temp2, ' ')){
         if(cont == 0){
             detalles[0] = temp2;
@@ -71,18 +75,22 @@ void *estructura(int i){
         }
         cont++;
     }
+
+    //--------------------------Impreción de información
     if(detalles[1] != "0"){
         cout << ips[posicion2] << "     " << detalles[0] << "        " << detalles[1] << "     " << detalles[2]+"      UP\n"; 
     }else{
         cout << ips[posicion2] << "     " << detalles[0] << "        " << detalles[1] << "     " << detalles[2]+"      DOWN\n"; 
     }
-        
+
     pthread_mutex_unlock(&mutex);
     return 0;
 }
 
+
+//función que cuenta la cantidad de ips en el archivo txt
 int cant_ips(){
-    char temp[50];
+    char temp[50]; 
     int cont = 0;
 
     FILE *archivo;
@@ -122,9 +130,6 @@ int cant_ips(){
 //argv[2]: cantidad_paquetes
 int main(int argc, char *argv[]){
     pthread_mutex_init(&mutex, NULL);
-    //guarda el nombre del archivo y la cantidad de paquetes en 
-    //strings globales para que se pueda acceder a estos datos 
-    //desde cualquier parte del código
     
     nombre_archivo = argv[1];
     cant_paquetes = argv[2];
@@ -132,16 +137,22 @@ int main(int argc, char *argv[]){
     //creación de un arreglo con la misma cantidad
     //de hebras que la cantidad de ips en el archivo
     num = cant_ips();
+
+    //cambia el tamaño de los vectores con la cantidad de espacio que se utilizará
     info.resize(num);
     detalles.resize(3);
+
+    //creación de arreglo con la misma cantidad de hebras que ips leídos
     thread threads[num];
-    //void *argumento;
+    
+    //impresión de primera parte de la visualización del resultado
     cout << "IP              Trans.   Rec.   Perd.   Estado\n";
     cout << "-----------------------------------------------\n";
+
+
     for(int i = 0; i < num; i++){
         //creación de las hebras y envío de 
         //argumento con su posición en el arreglo de hebras
-        //argumento = reinterpret_cast<void*>(i);
         
         threads[i] = thread(estructura, i);
         
